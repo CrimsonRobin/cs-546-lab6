@@ -36,6 +36,29 @@ function checkIfPriceValid(price) {
     return price;
 }
 
+function checkIfRatingValid(rating) {
+    if(typeof rating !== "number") {
+        throw new Error(`${rating} is not provided.`);
+    }
+
+    if(Number.isFinite(rating) === false) {
+        throw new Error(`${rating} is not a valid number.`);
+    }
+
+    if(rating < 1 || rating > 5) {
+        throw new Error(`${rating} is not in the range of 1 to 5.`);
+    }
+
+    if(Number.isInteger(rating) === false) {
+        const arrayCheck = rating.toString().split(".");
+        if(arrayCheck.at(1).length > 1) {
+            throw new Error(`${rating} has more than one decimal place.`);
+        }
+    }
+
+    return rating;
+}
+
 function checkIfValidArray(arr) {
     if(Array.isArray(arr) === false) {
         throw new Error(`${arr} is not an array.`);
@@ -48,4 +71,4 @@ function checkIfValidArray(arr) {
     }
 }
 
-export {checkIfString, checkIfPriceValid, checkIfValidArray}
+export {checkIfString, checkIfPriceValid, checkIfValidArray, checkIfRatingValid}
