@@ -88,7 +88,23 @@ const getAll = async () => {
   //For getAll:  You will have to modify this function so it just returns the _id and name of the products as shown below
   //in the GET /products route example. (Hint: use a projection!) 
   const productCollection = await products();
-    let productList = await productCollection.find({}).toArray();
+    let productList = await productCollection.find({})
+    .project({
+      _id: 1,
+      productName: 1,
+      productDescription: 0,
+      modelNumber: 0,
+      price: 0,
+      manufacturer: 0,
+      manufacturerWebsite: 0,
+      keywords: 0,
+      categories: 0,
+      dateReleased: 0,
+      discontinued: 0,
+      reviews: 0,
+      averageRating: 0
+    })
+    .toArray();
 
     if (!productList){
       throw new Error("could not get all the products.");
