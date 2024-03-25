@@ -90,8 +90,6 @@ const getAll = async () => {
   const productCollection = await products();
     let productList = await productCollection.find({})
     .project({
-      _id: 1,
-      productName: 1,
       productDescription: 0,
       modelNumber: 0,
       price: 0,

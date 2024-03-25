@@ -30,7 +30,7 @@ const createReview = async (
   const date = new Date();
 
   const newReview = {
-    _id: ObjectId(),
+    _id: new ObjectId(),
     title: title,
     reviewDate: date.toLocaleDateString("en-US"),
     reviewerName: reviewerName,
@@ -45,10 +45,13 @@ const createReview = async (
   //update rating
   const ratingArray = prodreviewArray.map(({rating}) => rating);
   let avgRating = 0;
-  for(let r of ratingArray) {
-    avgRating += r;
+
+  if(ratingArray.length > 0) {
+    for(let r of ratingArray) {
+      avgRating += r;
+    }
+    avgRating = avgRating / ratingArray.length;
   }
-  avgRating = avgRating / ratingArray.length;
 
   const productCollection = await products();
   await productCollection.updateOne(
@@ -86,27 +89,23 @@ const getReview = async (reviewId) => {
   }
 
   const productCollection = await products();
-  const reviewArray = await productCollection
+  let reviewArray = await productCollection
   .find({})
   .project(
     {
-      _id: 0, 
-      productName: 0,
-      productDescription: 0,
-      modelNumber: 0,
-      price: 0,
-      manufacturer: 0,
-      manufacturerWebsite: 0,
-      keywords: 0,
-      categories: 0,
-      dateReleased: 0,
-      discontinued: 0,
-      reviews: 1,
-      averageRating: 0
+      _id: 0,
+      reviews: 1
     })
-  .toArray();
+  .toArray(); // an array of objects of objects
 
-  let reviewObject = reviewArray.find(({_id}) => _id === reviewId);
+  let reviewObject = undefined;
+  for(let prod of reviewArray) {
+    for(let rev of prod.reviews) {
+      if(rev._id.toString() === reviewId) {
+        reviewObject = rev;
+      }
+    }
+  }
 
   if(reviewObject === undefined) {
     throw new Error(`No review with ID: ${reviewId}`);
@@ -158,20 +157,23 @@ const updateReview = async (reviewId, updateObject) => {
   review.reviewDate = date.toLocaleDateString("en-US");
 
   const productCollection = await products();
-  const product = await productCollection.find({'reviews._id': Object.createFromHexString(reviewId)});
-  const reviewList = await getAllReviews(product._id.toString());
+  const product = await productCollection.find({'reviews._id': ObjectId.createFromHexString(reviewId)}).toArray();
+  const reviewList = await getAllReviews(product.at(0)._id.toString());
 
-  const newReviewList = reviewList.map((r) => r._id === reviewId ? review : r);
+  const newReviewList = reviewList.map((r) => r._id.toString() === reviewId ? review : r);
 
   const ratingArray = newReviewList.map(({rating}) => rating);
   let avgRating = 0;
-  for(let r of ratingArray) {
-    avgRating += r;
+
+  if(ratingArray.length > 0) {
+    for(let r of ratingArray) {
+      avgRating += r;
+    }
+    avgRating = avgRating / ratingArray.length;
   }
-  avgRating = avgRating / ratingArray.length;
 
   const updatedProduct = await productCollection.findOneAndUpdate(
-    {_id: product._id}, 
+    {_id: product.at(0)._id}, 
     {$set: 
       {
         reviews: newReviewList,
@@ -196,23 +198,26 @@ const removeReview = async (reviewId) => {
     throw new Error(`invalid object ID: ${reviewId}.`);
   }
 
-  const review = await getReview(reviewId);
+  await getReview(reviewId);
 
   const productCollection = await products();
-  const product = await productCollection.find({'reviews._id': Object.createFromHexString(reviewId)});
-  const reviewList = await getAllReviews(product._id.toString());
+  const productArray = await productCollection.find({'reviews._id': ObjectId.createFromHexString(reviewId)}).toArray();
+  const reviewList = await getAllReviews(productArray.at(0)._id.toString());
 
-  const newReviewList = reviewList.filter(({_id}) => _id !== reviewId);
+  const newReviewList = reviewList.filter(({_id}) => _id.toString() !== reviewId);
 
   const ratingArray = newReviewList.map(({rating}) => rating);
   let avgRating = 0;
-  for(let r of ratingArray) {
-    avgRating += r;
+
+  if(ratingArray.length > 0) {
+    for(let r of ratingArray) {
+      avgRating += r;
+    }
+    avgRating = avgRating / ratingArray.length;
   }
-  avgRating = avgRating / ratingArray.length;
 
   const updatedProduct = await productCollection.findOneAndUpdate(
-    {_id: product._id}, 
+    {_id: productArray.at(0)._id}, 
     {$set: 
       {
         reviews: newReviewList,

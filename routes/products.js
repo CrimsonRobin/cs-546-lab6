@@ -3,7 +3,9 @@
 import express from "express";
 import * as products from "../data/products.js";
 import * as helper from "../helpers.js";
-import { ObjectId } from "mongodb";
+import {isValid, isMatch} from "date-fns";
+import {ObjectId} from "mongodb";
+import {isHttpUri} from "valid-url";
 
 const router = express.Router();
 
@@ -158,7 +160,7 @@ router
         throw new Error(`${req.body.discontinued} is not a boolean.`);
       }
 
-      const product = await products.update(req.body.productName, req.body.productDescription, req.body.modelNumber, req.body.price, req.body.manufacturer, req.body.manufacturerWebsite, req.body.keywords, 
+      const product = await products.update(req.params.productId, req.body.productName, req.body.productDescription, req.body.modelNumber, req.body.price, req.body.manufacturer, req.body.manufacturerWebsite, req.body.keywords, 
         req.body.categories, req.body.dateReleased, req.body.discontinued);
 
       return res.status(200).json(product);

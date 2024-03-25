@@ -5,3 +5,17 @@
     - When the route is /reviews use the routes defined in reviews.js routing file
     - All other enpoints should respond with a 404 as shown in the lecture code
 */
+
+import productRoutes from './products.js';
+import reviewRoutes from './reviews.js';
+
+const constructorMethod = (app) => {
+  app.use('/products', productRoutes);
+  app.use('/reviews', reviewRoutes);
+
+  app.use('*', (req, res) => {
+    res.status(404).json({error: 'Route Not found'});
+  });
+};
+
+export default constructorMethod;

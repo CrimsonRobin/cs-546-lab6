@@ -79,13 +79,66 @@ router
   })
   .patch(async (req, res) => {
     try {
-      const product = await reviews.updateReview(req.params.reviewId, req.body);
+      req.params.reviewId = helper.checkIfString(req.params.reviewId);
+
+      if(ObjectId.isValid(req.params.reviewId) === false) {
+        throw new Error(`invalid object ID: ${req.params.reviewId}.`);
+      }
+
+      if(Object.hasOwn(req.body, "reviewId") === false && Object.hasOwn(req.body, "title") === false && Object.hasOwn(req.body, "reviewerName") === false && Object.hasOwn(req.body, "review") === false && Object.hasOwn(req.body, "rating") === false) {
+        throw new Error(`req.body has none of the necessary fields.`);
+      }
+
+      if(Object.hasOwn(req.body, "reviewId") === true) {
+        req.body.reviewId = helper.checkIfString(req.body.reviewId);
+      }
+
+      if(Object.hasOwn(req.body, "title") === true) {
+        req.body.title = helper.checkIfString(req.body.title);
+      }
+
+      if(Object.hasOwn(req.body, "reviewerName") === true) {
+        req.body.reviewerName = helper.checkIfString(req.body.reviewerName);
+      }
+
+      if(Object.hasOwn(req.body, "review") === true) {
+        req.body.review = helper.checkIfString(req.body.review);
+      }
+
+      if(Object.hasOwn(req.body, "rating") === true) {
+        req.body.rating = helper.checkIfRatingValid(req.body.rating);
+      }
+
     } catch (error) {
-      
+      return res.status(400).send(error.message);
+    }
+    try {
+      await reviews.getReview(req.params.reviewId);
+
+      const product = await reviews.updateReview(req.params.reviewId, req.body);
+      return res.status(200).json(product);
+    } catch (error) {
+      return res.status(404).send(error.message);
     }
   })
   .delete(async (req, res) => {
-    //code here for DELETE
+    try {
+      req.params.reviewId = helper.checkIfString(req.params.reviewId);
+
+      if(ObjectId.isValid(req.params.reviewId) === false) {
+        throw new Error(`invalid object ID: ${req.params.reviewId}.`);
+      }
+
+    } catch (error) {
+      return res.status(400).send(error.message);
+    }
+    try {
+      await reviews.getReview(req.params.reviewId);
+      const product = await reviews.removeReview(req.params.reviewId);
+      return res.status(200).json(product);
+    } catch (error) {
+      return res.status(404).send(error.message);
+    }
   });
 
   export default router;
